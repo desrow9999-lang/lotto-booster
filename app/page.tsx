@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-// Supabase設定（接続情報反映済み）
+// Supabase設定
 const SUPABASE_URL = 'https://mwurdtuqkgnqlaqscrg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_YVaA4UIJA_G3qIXtM4Bg_Q_rjViZTpG'; 
 
@@ -30,7 +30,6 @@ export default function LotteryApp() {
     setIsGenerated(true);
   };
 
-  // Supabaseに買い目を保存する関数
   const saveTicket = async () => {
     if (!isGenerated || numbers.length === 0) {
       alert('まずは買い目を生成してください！');
@@ -55,13 +54,14 @@ export default function LotteryApp() {
       });
 
       if (!response.ok) {
-        throw new Error('保存に失敗しました');
+        const errorText = await response.text();
+        throw new Error(`サーバーエラー: ${response.status} - ${errorText}`);
       }
 
       alert('✨ 買い目がクラウドデータベースに正常に保存されました！');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('エラーが発生しました。');
+      alert(`エラー詳細: ${error.message || error}`);
     } finally {
       setIsSaving(false);
     }

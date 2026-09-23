@@ -1,15 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const SUPABASE_URL = 'https://mwurdtuqkgnqlaqscrg.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_YVaA4UIJA_G3qIXtM4Bg_Q_rjViZTpG'; 
+interface Ticket {
+  id: string;
+  lotto_type: string;
+  numbers: string;
+  created_at: string;
+}
 
 export default function LotteryApp() {
   const [selectedLotto, setSelectedLotto] = useState<'lotto6' | 'lotto7' | 'minilotto'>('lotto6');
   const [numbers, setNumbers] = useState<number[]>([]);
   const [isGenerated, setIsGenerated] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [savedTickets, setSavedTickets] = useState<Ticket[]>([]);
+
+  // 起動時にローカルストレージから保存済みチケットを読み込む
+  useEffect(() => {
+    const stored = localStorage.getItem('lotto_booster_tickets');
+    if (stored) {
+      try {
+        setSavedTickets(JSON.parse(stored));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
 
   const generateNumbers = () => {
     let count = 6;
@@ -29,7 +46,7 @@ export default function LotteryApp() {
     setIsGenerated(true);
   };
 
-  const saveTicket = async () => {
+  const saveTicket = () => {
     if (!isGenerated || numbers.length === 0) {
       alert('まずは買い目を生成してください！');
       return;
@@ -39,32 +56,30 @@ export default function LotteryApp() {
     try {
       const lottoLabels = { lotto6: 'ロト6', lotto7: 'ロト7', minilotto: 'ミニロト' };
       
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/saved_tickets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({
-          lotto_type: lottoLabels[selectedLotto],
-          numbers: numbers.map(n => String(n).padStart(2, '0')).join(', ')
-        })
-      });
+      const newTicket: Ticket = {
+        id: Date.now().toString(),
+        lotto_type: lottoLabels[selectedLotto],
+        numbers: numbers.map(n => String(n).padStart(2, '0')).join(', '),
+        created_at: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`サーバーエラー: ${response.status} - ${errorText}`);
-      }
+      const updatedTickets = [newTicket, ...savedTickets];
+      setSavedTickets(updatedTickets);
+      localStorage.setItem('lotto_booster_tickets', JSON.stringify(updatedTickets));
 
-      alert('✨ 買い目がクラウドデータベースに正常に保存されました！');
+      alert('✨ 買い目が正常に保存されました！');
     } catch (error: any) {
       console.error(error);
-      alert(`保存エラー: ${error.message || error}`);
+      alert('保存に失敗しました');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const deleteTicket = (id: string) => {
+    const updatedTickets = savedTickets.filter(t => t.id !== id);
+    setSavedTickets(updatedTickets);
+    localStorage.setItem('lotto_booster_tickets', JSON.stringify(updatedTickets));
   };
 
   return (
@@ -86,7 +101,7 @@ export default function LotteryApp() {
         backgroundColor: '#111827',
         borderRadius: '20px',
         border: '1px solid #1f2937',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
         padding: '24px'
       }}>
         
@@ -117,7 +132,6 @@ export default function LotteryApp() {
                   cursor: 'pointer',
                   backgroundColor: isActive ? '#dc2626' : 'transparent',
                   color: isActive ? '#ffffff' : '#9ca3af',
-                  boxShadow: isActive ? '0 4px 12px rgba(220, 38, 38, 0.4)' : 'none',
                   transition: 'all 0.2s'
                 }}
               >
@@ -156,7 +170,6 @@ export default function LotteryApp() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 6px 16px rgba(220, 38, 38, 0.4)',
                       fontSize: '16px',
                       border: '2px solid rgba(255, 255, 255, 0.2)'
                     }}
@@ -165,13 +178,10 @@ export default function LotteryApp() {
                   </div>
                 ))}
               </div>
-              <div style={{ fontSize: '12px', color: '#10b981', marginTop: '16px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                <span>✨</span> 統計的最適バランスで生成完了
-              </div>
             </div>
           ) : (
             <div style={{ color: '#4b5563', fontSize: '13px', padding: '12px 0' }}>
-              下のボタンを押して買い目を生成してください
+              ボタンを押して買い目を生成してください
             </div>
           )}
         </div>
@@ -189,15 +199,10 @@ export default function LotteryApp() {
               borderRadius: '12px',
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 8px 20px rgba(239, 68, 68, 0.3)',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
+              fontSize: '14px'
             }}
           >
-            <span>🚀</span> AI買い目を自動生成する
+            🚀 AI買い目を自動生成する
           </button>
           
           <button
@@ -213,20 +218,39 @@ export default function LotteryApp() {
               border: '1px solid #374151',
               cursor: 'pointer',
               fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
               opacity: isSaving ? 0.6 : 1
             }}
           >
-            <span>📥</span> {isSaving ? '保存中...' : 'この買い目を保存する'}
+            📥 {isSaving ? '保存中...' : 'この買い目を保存して抽選日に備える'}
           </button>
         </div>
 
-        {/* フッター */}
-        <div style={{ textAlign: 'center', fontSize: '11px', color: '#6b7280', borderTop: '1px solid #1f2937', paddingTop: '16px' }}>
-          Pro Membership で自動当せん照会機能が解放されます
+        {/* 保存済みチケット一覧 */}
+        <div style={{ borderTop: '1px solid #1f2937', paddingTop: '16px' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '12px', color: '#9ca3af' }}>📋 保存済みマイチケット</h2>
+          {savedTickets.length === 0 ? (
+            <div style={{ fontSize: '12px', color: '#4b5563', textAlign: 'center', padding: '10px 0' }}>保存された買い目はまだありません</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
+              {savedTickets.map((ticket) => (
+                <div key={ticket.id} style={{ backgroundColor: '#030712', padding: '10px', borderRadius: '8px', border: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                      <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: '700' }}>[{ticket.lotto_type}]</span>
+                      <span style={{ fontSize: '10px', color: '#6b7280' }}>{ticket.created_at}</span>
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.5px' }}>{ticket.numbers}</span>
+                  </div>
+                  <button 
+                    onClick={() => deleteTicket(ticket.id)}
+                    style={{ backgroundColor: '#374151', border: 'none', color: '#9ca3af', fontSize: '10px', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    削除
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

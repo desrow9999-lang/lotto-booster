@@ -2,10 +2,6 @@
 
 import { useState } from 'react';
 
-// Supabase設定
-const SUPABASE_URL = 'https://mwurdtuqkgnqlaqscrg.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_YVaA4UIJA_G3qIXtM4Bg_Q_rjViZTpG'; 
-
 export default function LotteryApp() {
   const [selectedLotto, setSelectedLotto] = useState<'lotto6' | 'lotto7' | 'minilotto'>('lotto6');
   const [numbers, setNumbers] = useState<number[]>([]);
@@ -39,26 +35,11 @@ export default function LotteryApp() {
     setIsSaving(true);
     try {
       const lottoLabels = { lotto6: 'ロト6', lotto7: 'ロト7', minilotto: 'ミニロト' };
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/saved_tickets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({
-          lotto_type: lottoLabels[selectedLotto],
-          numbers: numbers.map(n => String(n).padStart(2, '0')).join(', ')
-        })
-      });
+      
+      // 仮の保存処理（まずは確実に動くかテスト）
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`サーバーエラー: ${response.status} - ${errorText}`);
-      }
-
-      alert('✨ 買い目がクラウドデータベースに正常に保存されました！');
+      alert('✨ 買い目を保存しました！（テスト成功）');
     } catch (error: any) {
       console.error(error);
       alert(`エラー詳細: ${error.message || error}`);

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'main' // Reactの基本インポート
-import React from 'react';
+import { useState, useEffect } from 'react';
 
 interface Ticket {
   id: string;
@@ -82,15 +81,12 @@ export default function LotteryApp() {
     }
   };
 
-  // 🎫 自動抽選・当せん照会機能
   const checkWinning = (id: string) => {
     const target = savedTickets.find(t => t.id === id);
     if (!target) return;
 
-    // ユーザーが持っている数字の配列
     const userNums = target.numbers.split(', ').map(n => parseInt(n, 10));
     
-    // 抽選されたと仮定する当せん番号（ランダム生成）
     let count = target.lotto_type === 'ロト7' ? 7 : target.lotto_type === 'ミニロト' ? 5 : 6;
     let max = target.lotto_type === 'ロト7' ? 37 : target.lotto_type === 'ミニロト' ? 31 : 43;
     
@@ -100,10 +96,8 @@ export default function LotteryApp() {
       if (!winningNums.includes(num)) winningNums.push(num);
     }
 
-    // 一致する個数を計算
     const matched = userNums.filter(n => winningNums.includes(n)).length;
 
-    // 等賞の判定ロジック
     let prize = 'はずれ';
     if (target.lotto_type === 'ロト6') {
       if (matched === 6) prize = '🎉 1等当せん！';

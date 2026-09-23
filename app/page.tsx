@@ -34,7 +34,7 @@ export default function LotteryApp() {
       padding: '24px 16px',
       display: 'flex',
       flexDirection: 'column',
-      alignItem: 'center',
+      alignItems: 'center',
       boxSizing: 'border-box'
     }}>
       <div style={{

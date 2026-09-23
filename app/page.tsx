@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import React from 'react';
 
-interface Ticket {
+interface TicketItem {
   id: string;
   lotto_type: string;
   numbers: string;
@@ -14,15 +15,15 @@ interface Ticket {
   };
 }
 
-export default function LotteryApp() {
+export default function LottoBoosterApp() {
   const [selectedLotto, setSelectedLotto] = useState<'lotto6' | 'lotto7' | 'minilotto'>('lotto6');
   const [numbers, setNumbers] = useState<number[]>([]);
   const [isGenerated, setIsGenerated] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [savedTickets, setSavedTickets] = useState<Ticket[]>([]);
+  const [savedTickets, setSavedTickets] = useState<TicketItem[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('lotto_booster_tickets');
+    const stored = localStorage.getItem('lotto_booster_tickets_v2');
     if (stored) {
       try {
         setSavedTickets(JSON.parse(stored));
@@ -60,7 +61,7 @@ export default function LotteryApp() {
     try {
       const lottoLabels = { lotto6: 'ロト6', lotto7: 'ロト7', minilotto: 'ミニロト' };
       
-      const newTicket: Ticket = {
+      const newTicket: TicketItem = {
         id: Date.now().toString(),
         lotto_type: lottoLabels[selectedLotto],
         numbers: numbers.map(n => String(n).padStart(2, '0')).join(', '),
@@ -70,7 +71,7 @@ export default function LotteryApp() {
 
       const updatedTickets = [newTicket, ...savedTickets];
       setSavedTickets(updatedTickets);
-      localStorage.setItem('lotto_booster_tickets', JSON.stringify(updatedTickets));
+      localStorage.setItem('lotto_booster_tickets_v2', JSON.stringify(updatedTickets));
 
       alert('✨ 買い目が正常に保存されました！');
     } catch (error: any) {
@@ -126,14 +127,14 @@ export default function LotteryApp() {
     });
 
     setSavedTickets(updated);
-    localStorage.setItem('lotto_booster_tickets', JSON.stringify(updated));
+    localStorage.setItem('lotto_booster_tickets_v2', JSON.stringify(updated));
     alert(`【抽選結果発表】\n当せん番号: ${winningNums.sort((a,b)=>a-b).map(n=>String(n).padStart(2,'0')).join(', ')}\n一致数: ${matched}個\n判定: ${prize}`);
   };
 
   const deleteTicket = (id: string) => {
     const updatedTickets = savedTickets.filter(t => t.id !== id);
     setSavedTickets(updatedTickets);
-    localStorage.setItem('lotto_booster_tickets', JSON.stringify(updatedTickets));
+    localStorage.setItem('lotto_booster_tickets_v2', JSON.stringify(updatedTickets));
   };
 
   return (
@@ -164,7 +165,7 @@ export default function LotteryApp() {
           <h1 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             Lotto Booster <span style={{ fontSize: '18px' }}>🎯</span>
           </h1>
-          <span style={{ fontSize: '10px', backgroundColor: '#374151', color: '#9ca3af', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>PRO v1.0</span>
+          <span style={{ fontSize: '10px', backgroundColor: '#374151', color: '#9ca3af', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>PRO v2.0</span>
         </div>
         <p style={{ color: '#9ca3af', fontSize: '13px', margin: '0 0 20px 0' }}>AI予測アルゴリズム ＆ 自動当せん照会</p>
 

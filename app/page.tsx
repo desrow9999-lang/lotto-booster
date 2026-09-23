@@ -12,11 +12,10 @@ export default function Page() {
     lotto_type: string;
     numbers: string;
     created_at: string;
-    result?: { checked: boolean; matchedCount: number; prize: string };
   }>>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('lotto_booster_tickets_v4');
+    const stored = localStorage.getItem('lotto_booster_tickets_v5');
     if (stored) {
       try {
         setSavedTickets(JSON.parse(stored));
@@ -59,12 +58,11 @@ export default function Page() {
         lotto_type: lottoLabels[selectedLotto],
         numbers: numbers.map(n => String(n).padStart(2, '0')).join(', '),
         created_at: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        result: { checked: false, matchedCount: 0, prize: '照会待ち' }
       };
 
       const updatedTickets = [newTicket, ...savedTickets];
       setSavedTickets(updatedTickets);
-      localStorage.setItem('lotto_booster_tickets_v4', JSON.stringify(updatedTickets));
+      localStorage.setItem('lotto_booster_tickets_v5', JSON.stringify(updatedTickets));
 
       alert('✨ 買い目が正常に保存されました！');
     } catch (error: any) {
@@ -75,59 +73,10 @@ export default function Page() {
     }
   };
 
-  const checkWinning = (id: string) => {
-    const target = savedTickets.find(t => t.id === id);
-    if (!target) return;
-
-    const userNums = target.numbers.split(', ').map(n => parseInt(n, 10));
-    
-    let count = target.lotto_type === 'ロト7' ? 7 : target.lotto_type === 'ミニロト' ? 5 : 6;
-    let max = target.lotto_type === 'ロト7' ? 37 : target.lotto_type === 'ミニロト' ? 31 : 43;
-    
-    const winningNums: number[] = [];
-    while (winningNums.length < count) {
-      const num = Math.floor(Math.random() * max) + 1;
-      if (!winningNums.includes(num)) winningNums.push(num);
-    }
-
-    const matched = userNums.filter(n => winningNums.includes(n)).length;
-
-    let prize = 'はずれ';
-    if (target.lotto_type === 'ロト6') {
-      if (matched === 6) prize = '🎉 1等当せん！';
-      else if (matched === 5) prize = '🥈 3等当せん！';
-      else if (matched === 4) prize = '🥉 4等当せん！';
-      else if (matched === 3) prize = '5等当せん';
-    } else if (target.lotto_type === 'ロト7') {
-      if (matched === 7) prize = '🎉 1等当せん！';
-      else if (matched === 6) prize = '🥈 2〜3等当せん！';
-      else if (matched === 5) prize = '🥉 4等当せん！';
-      else if (matched === 4) prize = '5等当せん';
-    } else {
-      if (matched === 5) prize = '🎉 1等当せん！';
-      else if (matched === 4) prize = '🥈 2〜3等当せん！';
-      else if (matched === 3) prize = '🥉 4等当せん！';
-    }
-
-    const updated = savedTickets.map(t => {
-      if (t.id === id) {
-        return {
-          ...t,
-          result: { checked: true, matchedCount: matched, prize }
-        };
-      }
-      return t;
-    });
-
-    setSavedTickets(updated);
-    localStorage.setItem('lotto_booster_tickets_v4', JSON.stringify(updated));
-    alert(`【シミュレーション結果】\n当せん番号: ${winningNums.sort((a,b)=>a-b).map(n=>String(n).padStart(2,'0')).join(', ')}\n一致数: ${matched}個\n判定: ${prize}`);
-  };
-
   const deleteTicket = (id: string) => {
     const updatedTickets = savedTickets.filter(t => t.id !== id);
     setSavedTickets(updatedTickets);
-    localStorage.setItem('lotto_booster_tickets_v4', JSON.stringify(updatedTickets));
+    localStorage.setItem('lotto_booster_tickets_v5', JSON.stringify(updatedTickets));
   };
 
   return (
@@ -158,7 +107,7 @@ export default function Page() {
           <h1 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             Lotto Booster <span style={{ fontSize: '18px' }}>🎯</span>
           </h1>
-          <span style={{ fontSize: '10px', backgroundColor: '#374151', color: '#9ca3af', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>PRO v4.0</span>
+          <span style={{ fontSize: '10px', backgroundColor: '#374151', color: '#9ca3af', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>PRO v5.0</span>
         </div>
         <p style={{ color: '#9ca3af', fontSize: '13px', margin: '0 0 20px 0' }}>AI予測アルゴリズム ＆ 公式結果リンク</p>
 
@@ -316,20 +265,13 @@ export default function Page() {
                     </div>
                   </div>
                   
-                  <div style={{ fontSize: '14px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '8px', color: '#f8fafc' }}>
-                    {ticket.numbers}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                    <button 
-                      onClick={() => checkWinning(ticket.id)}
-                      style={{ backgroundColor: '#1f2937', border: '1px solid #374151', color: '#d1d5db', fontSize: '11px', fontWeight: '600', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer' }}
-                    >
-                      🎲 テスト抽選チェック
-                    </button>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '700', letterSpacing: '0.5px', color: '#f8fafc' }}>
+                      {ticket.numbers}
+                    </div>
                     <button 
                       onClick={() => deleteTicket(ticket.id)}
-                      style={{ backgroundColor: '#374151', border: 'none', color: '#9ca3af', fontSize: '11px', padding: '5px 8px', borderRadius: '6px', cursor: 'pointer' }}
+                      style={{ backgroundColor: '#374151', border: 'none', color: '#9ca3af', fontSize: '11px', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer' }}
                     >
                       削除
                     </button>

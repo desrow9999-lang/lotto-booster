@@ -1,13 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://mwurdtuqkgnqlaqscrg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_YVaA4UIJA_G3qIXtM4Bg_Q_rjViZTpG'; 
-
-// 公式クライアントの初期化
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default function LotteryApp() {
   const [selectedLotto, setSelectedLotto] = useState<'lotto6' | 'lotto7' | 'minilotto'>('lotto6');
@@ -43,24 +39,29 @@ export default function LotteryApp() {
     try {
       const lottoLabels = { lotto6: 'ロト6', lotto7: 'ロト7', minilotto: 'ミニロト' };
       
-      // Supabase公式クライアントで安全にインサート
-      const { error } = await supabase
-        .from('saved_tickets')
-        .insert([
-          {
-            lotto_type: lottoLabels[selectedLotto],
-            numbers: numbers.map(n => String(n).padStart(2, '0')).join(', ')
-          }
-        ]);
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/saved_tickets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          lotto_type: lottoLabels[selectedLotto],
+          numbers: numbers.map(n => String(n).padStart(2, '0')).join(', ')
+        })
+      });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`サーバーエラー: ${response.status} - ${errorText}`);
       }
 
       alert('✨ 買い目がクラウドデータベースに正常に保存されました！');
     } catch (error: any) {
       console.error(error);
-      alert(`保存エラー: ${error.message || JSON.stringify(error)}`);
+      alert(`保存エラー: ${error.message || error}`);
     } finally {
       setIsSaving(false);
     }

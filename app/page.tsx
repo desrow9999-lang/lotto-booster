@@ -2,10 +2,15 @@
 
 import { useState } from 'react';
 
+// Supabase設定（接続情報反映済み）
+const SUPABASE_URL = 'https://mwurdtuqkgnqlaqscrg.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_YVaA4UIJA_G3qIXtM4Bg_Q_rjViZTpG'; 
+
 export default function LotteryApp() {
   const [selectedLotto, setSelectedLotto] = useState<'lotto6' | 'lotto7' | 'minilotto'>('lotto6');
   const [numbers, setNumbers] = useState<number[]>([]);
   const [isGenerated, setIsGenerated] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const generateNumbers = () => {
     let count = 6;
@@ -23,6 +28,43 @@ export default function LotteryApp() {
     results.sort((a, b) => a - b);
     setNumbers(results);
     setIsGenerated(true);
+  };
+
+  // Supabaseに買い目を保存する関数
+  const saveTicket = async () => {
+    if (!isGenerated || numbers.length === 0) {
+      alert('まずは買い目を生成してください！');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const lottoLabels = { lotto6: 'ロト6', lotto7: 'ロト7', minilotto: 'ミニロト' };
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/saved_tickets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          lotto_type: lottoLabels[selectedLotto],
+          numbers: numbers.map(n => String(n).padStart(2, '0')).join(', ')
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('保存に失敗しました');
+      }
+
+      alert('✨ 買い目がクラウドデータベースに正常に保存されました！');
+    } catch (error) {
+      console.error(error);
+      alert('エラーが発生しました。');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -159,7 +201,8 @@ export default function LotteryApp() {
           </button>
           
           <button
-            onClick={() => alert('買い目を保存しました！（Supabase連携へ進みます）')}
+            onClick={saveTicket}
+            disabled={isSaving}
             style={{
               width: '100%',
               padding: '12px',
@@ -173,10 +216,11 @@ export default function LotteryApp() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px'
+              gap: '6px',
+              opacity: isSaving ? 0.6 : 1
             }}
           >
-            <span>📥</span> この買い目を保存する
+            <span>📥</span> {isSaving ? '保存中...' : 'この買い目を保存する'}
           </button>
         </div>
 

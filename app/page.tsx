@@ -6,38 +6,55 @@ export default function LotteryApp() {
   const [selectedLotto, setSelectedLotto] = useState<'lotto6' | 'lotto7' | 'minilotto'>('lotto6');
   const [numbers, setNumbers] = useState<number[]>([]);
   const [isGenerated, setIsGenerated] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const generateNumbers = () => {
-    let count = 6;
-    let max = 43;
-    if (selectedLotto === 'lotto7') { count = 7; max = 37; }
-    if (selectedLotto === 'minilotto') { count = 5; max = 31; }
+    try {
+      setErrorMessage(null);
+      let count = 6;
+      let max = 43;
+      if (selectedLotto === 'lotto7') { count = 7; max = 37; }
+      if (selectedLotto === 'minilotto') { count = 5; max = 31; }
 
-    const results: number[] = [];
-    while (results.length < count) {
-      const num = Math.floor(Math.random() * max) + 1;
-      if (!results.includes(num)) {
-        results.push(num);
+      const results: number[] = [];
+      while (results.length < count) {
+        const num = Math.floor(Math.random() * max) + 1;
+        if (!results.includes(num)) {
+          results.push(num);
+        }
       }
+      results.sort((a, b) => a - b);
+      setNumbers(results);
+      setIsGenerated(true);
+    } catch (e: any) {
+      setErrorMessage('生成エラー: ' + e.message);
     }
-    results.sort((a, b) => a - b);
-    setNumbers(results);
-    setIsGenerated(true);
   };
 
   const saveTicket = () => {
-    if (!isGenerated) {
-      alert('まずは買い目を生成してください！');
-      return;
+    try {
+      setErrorMessage(null);
+      if (!isGenerated) {
+        setErrorMessage('まずは買い目を生成してください！');
+        return;
+      }
+      alert('🎉 保存テスト成功！');
+    } catch (e: any) {
+      setErrorMessage('保存エラー: ' + e.message);
     }
-    // 通信エラーを100%起こさない純粋なポップアップテスト
-    alert('🎉 保存ボタンが正常に動作しました！（テスト成功）');
   };
 
   return (
     <div style={{ padding: '24px', backgroundColor: '#090d16', color: '#fff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
-      <h1 style={{ fontSize: '20px', marginBottom: '16px' }}>Lotto Booster テスト画面</h1>
+      <h1 style={{ fontSize: '20px', marginBottom: '16px' }}>Lotto Booster デバッグ画面</h1>
       
+      {/* エラーメッセージを画面に直接赤字で表示 */}
+      {errorMessage && (
+        <div style={{ backgroundColor: '#7f1d1d', color: '#fca5a5', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', wordBreak: 'break-all' }}>
+          ⚠️ {errorMessage}
+        </div>
+      )}
+
       <div style={{ marginBottom: '16px' }}>
         <button onClick={() => setSelectedLotto('lotto6')} style={{ marginRight: '8px', padding: '8px' }}>ロト6</button>
         <button onClick={() => setSelectedLotto('lotto7')} style={{ marginRight: '8px', padding: '8px' }}>ロト7</button>

@@ -16,7 +16,7 @@ export default function Page() {
   }>>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('lotto_booster_tickets_v3');
+    const stored = localStorage.getItem('lotto_booster_tickets_v4');
     if (stored) {
       try {
         setSavedTickets(JSON.parse(stored));
@@ -64,7 +64,7 @@ export default function Page() {
 
       const updatedTickets = [newTicket, ...savedTickets];
       setSavedTickets(updatedTickets);
-      localStorage.setItem('lotto_booster_tickets_v3', JSON.stringify(updatedTickets));
+      localStorage.setItem('lotto_booster_tickets_v4', JSON.stringify(updatedTickets));
 
       alert('✨ 買い目が正常に保存されました！');
     } catch (error: any) {
@@ -120,14 +120,14 @@ export default function Page() {
     });
 
     setSavedTickets(updated);
-    localStorage.setItem('lotto_booster_tickets_v3', JSON.stringify(updated));
-    alert(`【抽選結果発表】\n当せん番号: ${winningNums.sort((a,b)=>a-b).map(n=>String(n).padStart(2,'0')).join(', ')}\n一致数: ${matched}個\n判定: ${prize}`);
+    localStorage.setItem('lotto_booster_tickets_v4', JSON.stringify(updated));
+    alert(`【シミュレーション結果】\n当せん番号: ${winningNums.sort((a,b)=>a-b).map(n=>String(n).padStart(2,'0')).join(', ')}\n一致数: ${matched}個\n判定: ${prize}`);
   };
 
   const deleteTicket = (id: string) => {
     const updatedTickets = savedTickets.filter(t => t.id !== id);
     setSavedTickets(updatedTickets);
-    localStorage.setItem('lotto_booster_tickets_v3', JSON.stringify(updatedTickets));
+    localStorage.setItem('lotto_booster_tickets_v4', JSON.stringify(updatedTickets));
   };
 
   return (
@@ -158,9 +158,36 @@ export default function Page() {
           <h1 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             Lotto Booster <span style={{ fontSize: '18px' }}>🎯</span>
           </h1>
-          <span style={{ fontSize: '10px', backgroundColor: '#374151', color: '#9ca3af', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>PRO v3.0</span>
+          <span style={{ fontSize: '10px', backgroundColor: '#374151', color: '#9ca3af', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>PRO v4.0</span>
         </div>
-        <p style={{ color: '#9ca3af', fontSize: '13px', margin: '0 0 20px 0' }}>AI予測アルゴリズム ＆ 自動当せん照会</p>
+        <p style={{ color: '#9ca3af', fontSize: '13px', margin: '0 0 20px 0' }}>AI予測アルゴリズム ＆ 公式結果リンク</p>
+
+        {/* 宝くじ公式サイトへのリンクボタン */}
+        <a
+          href="https://www.takarakuji-official.jp/check/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            width: '100%',
+            padding: '12px',
+            marginBottom: '20px',
+            backgroundColor: '#1e293b',
+            color: '#38bdf8',
+            borderRadius: '12px',
+            border: '1px solid #334155',
+            fontWeight: '700',
+            fontSize: '13px',
+            textDecoration: 'none',
+            boxSizing: 'border-box',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          🌐 宝くじ公式サイトで当せん番号を確認する
+        </a>
 
         {/* タブ選択 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '24px', backgroundColor: '#030712', padding: '4px', borderRadius: '12px' }}>
@@ -269,13 +296,13 @@ export default function Page() {
               opacity: isSaving ? 0.6 : 1
             }}
           >
-            📥 {isSaving ? '保存中...' : 'この買い目を保存して抽選に備える'}
+            📥 {isSaving ? '保存中...' : 'この買い目を保存しておく'}
           </button>
         </div>
 
-        {/* 保存済みチケット一覧 ＆ 自動抽選機能 */}
+        {/* 保存済みチケット一覧 */}
         <div style={{ borderTop: '1px solid #1f2937', paddingTop: '16px' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '12px', color: '#9ca3af' }}>📋 保存済みマイチケット ＆ 抽選照会</h2>
+          <h2 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '12px', color: '#9ca3af' }}>📋 保存済みマイチケット</h2>
           {savedTickets.length === 0 ? (
             <div style={{ fontSize: '12px', color: '#4b5563', textAlign: 'center', padding: '10px 0' }}>保存された買い目はまだありません</div>
           ) : (
@@ -287,9 +314,6 @@ export default function Page() {
                       <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: '700', marginRight: '6px' }}>[{ticket.lotto_type}]</span>
                       <span style={{ fontSize: '10px', color: '#6b7280' }}>{ticket.created_at}</span>
                     </div>
-                    <span style={{ fontSize: '11px', fontWeight: '700', color: ticket.result?.checked ? (ticket.result.prize.includes('当せん') ? '#10b981' : '#9ca3af') : '#f59e0b' }}>
-                      {ticket.result?.prize || '照会待ち'}
-                    </span>
                   </div>
                   
                   <div style={{ fontSize: '14px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '8px', color: '#f8fafc' }}>
@@ -299,9 +323,9 @@ export default function Page() {
                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                     <button 
                       onClick={() => checkWinning(ticket.id)}
-                      style={{ backgroundColor: '#dc2626', border: 'none', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer' }}
+                      style={{ backgroundColor: '#1f2937', border: '1px solid #374151', color: '#d1d5db', fontSize: '11px', fontWeight: '600', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer' }}
                     >
-                      🎯 抽選結果を照会する
+                      🎲 テスト抽選チェック
                     </button>
                     <button 
                       onClick={() => deleteTicket(ticket.id)}
